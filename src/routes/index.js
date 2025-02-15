@@ -1,24 +1,29 @@
 // src/routes/index.js
-const express = require('express');
 
-// author and version from our package.json file
+const express = require('express');
 const { authors, version } = require('../../package.json');
+const { createSuccessResponse } = require('../response')
 
 // Create a router that we can use to mount our API
 const router = express.Router();
 
 // Simple health route check, return "ok" status if server is running
 router.get('/', (req, res) => {
-  // Clients shouldn't cache this response (always request it fresh)
-  res.setHeader('Cache-Control', 'no-cache');
-
-  // Send a 200 'OK' response with info about our repo
-  res.status(200).json({
-    status: 'ok',
-    authors,
+  const data = {
+    authors, 
     githubUrl: 'https://github.com/HenryPahn/bloggle',
     version,
-  });
+  }
+
+  // create a success response
+  const successResponse = createSuccessResponse({
+    ...data
+  })
+
+  // Client's shouldn't cache this response (always request it fresh)
+  res.setHeader('Cache-Control', 'no-cache');
+  // Send a 200 'OK' response
+  res.status(200).json(successResponse);
 });
 
 module.exports = router;
