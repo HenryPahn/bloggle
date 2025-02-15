@@ -7,6 +7,8 @@ const { createSuccessResponse } = require('../response')
 // Create a router that we can use to mount our API
 const router = express.Router();
 
+router.use('/api', require('./api'));
+
 // Simple health route check, return "ok" status if server is running
 router.get('/', (req, res) => {
   const data = {
