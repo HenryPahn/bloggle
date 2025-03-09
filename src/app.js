@@ -7,7 +7,7 @@ const compression = require('compression');
 
 // author and version from our package.json file
 // TODO: make sure you have updated your name in the `author` section
-const { author, version } = require('../package.json');
+const { authors, version } = require('../package.json');
 
 const logger = require('./logger');
 const pino = require('pino-http')({
@@ -40,9 +40,7 @@ app.get('/', (req, res) => {
   // Send a 200 'OK' response with info about our repo
   res.status(200).json({
     status: 'ok',
-    author,
-    // TODO: change this to use your GitHub username!
-    githubUrl: 'https://github.com/REPLACE_WITH_YOUR_GITHUB_USERNAME/fragments',
+    authors,
     version,
   });
 });

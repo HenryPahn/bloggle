@@ -1,17 +1,24 @@
-const cors = require("cors");
-const express = require("express");
-const app = express();
+// src/server.js
 
-app.use(express.json());
+// We want to gracefully shutdown our server
+const stoppable = require('stoppable');
 
-// Use CORS middleware so we can make requests across origins
-app.use(cors());
+// Get our logger instance
+const logger = require('./logger');
 
-app.get("/", (req, res) => {
-    res.send("Bloggle Backend is set up and running!");
-});
+// Get our express app instance
+const app = require('./app');
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Get the desired port from the process' environment. Default to `8080`
+const port = parseInt(process.env.PORT || '8080', 10);
+
+// Start a server listening on this port
+const server = stoppable(
+  app.listen(port, () => {
+    // Log a message that the server has started, and which port it's using.
+    logger.info(`Server started on port ${port}`);
+  })
+);
+
+// Export our server instance so other parts of our code can access it if necessary.
+module.exports = server;
