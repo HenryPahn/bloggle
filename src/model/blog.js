@@ -12,9 +12,9 @@ class Blog {
    */
   constructor({ id, ownerId, created, updated }) {
     // OwnerId and type are required. if not exist, throw an exception
-    if (!ownerId || !type) {
+    if (!ownerId) {
       throw new Error(
-        `ownerId and type strings are required, got ownerId=${ownerId}, type=${type}`
+        `ownerId and type strings are required, got ownerId=${ownerId}`
       );
     }
 
