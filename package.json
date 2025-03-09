@@ -5,8 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint \"./src/**/*.js\"",
-    "start": "node server.js",
-    "dev": "LOG_LEVEL=debug nodemon server.js --watch src"
+    "start": "node src/server.js",
+    "dev": "LOG_LEVEL=debug nodemon ./src/server.js --watch src",
+    "debug": "LOG_LEVEL=debug nodemon --inspect=0.0.0.0:9229 ./src/server.js --watch src"
   },
   "keywords": [],
   "authors": [
@@ -34,7 +35,6 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "nodemon": "^3.1.9",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "pino-pretty": "^13.0.0",
@@ -44,6 +44,7 @@
     "@eslint/js": "^9.22.0",
     "eslint": "^9.22.0",
     "globals": "^16.0.0",
+    "nodemon": "^3.1.9",
     "prettier": "3.5.3"
   }
 }
