@@ -30,8 +30,10 @@
   "license": "ISC",
   "description": "bloggle back-end api",
   "dependencies": {
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "helmet": "^8.0.0",
     "nodemon": "^3.1.9",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
