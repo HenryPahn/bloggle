@@ -20,11 +20,19 @@ app.use(pino);
 // Use helmetjs security middleware
 app.use(helmet());
 
+const passport = require('passport');
+const authenticate = require('./auth');
+
 // Use CORS middleware so we can make requests across origins
 app.use(cors());
 
 // Use gzip/deflate compression middleware
 app.use(compression());
+
+// Set up our passport authentication middleware
+passport.use(authenticate.strategy());
+app.use(passport.initialize());
+
 
 // all routes of ServerAPI goes to routes dir 
 app.use('/', require('./routes'));
