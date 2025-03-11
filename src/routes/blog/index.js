@@ -6,7 +6,10 @@ const express = require('express');
 const router = express.Router();
 
 // GET /blogger/
-router.get(`/`, require('./get')); 
+//router.get(`/`, require('./get')); 
+
+// testing-route to check authorization
+router.get(`/allBlogs`, require('./get')); 
 
 // Other routes (POST, DELETE, etc.) for favourite blogs will go here later on...
 
