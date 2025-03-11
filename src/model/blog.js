@@ -46,12 +46,9 @@ class Blog {
       const blogRefs = query(collection(fireDB, "blogs"), where("ownerId", "==", ownerId));
       const blogSnaps = await getDocs(blogRefs);
 
-      if (blogSnaps.empty) {
-        throw new Error(`No blogs found for owner: ${ownerId}`);
-      }
-
       let blogIds = blogSnaps.docs.map((doc) => doc.data().id);
-      return blogIds;
+
+      return blogSnaps.empty ? blogIds : [];
     } catch (error) {
       console.error("Error:", error);
     }
@@ -69,7 +66,7 @@ class Blog {
       const q = query(
         collection(fireDB, "blogs"),
         where("ownerId", "==", ownerId),
-        where("id", "==", id) // "__name__" refers to the document ID
+        where("id", "==", id) 
       );
 
       const querySnapshot = await getDocs(q);
@@ -79,11 +76,10 @@ class Blog {
         throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
       }
 
-      // Extract blog data (since __name__ is unique, there will be at most 1 result)
       const blogDoc = querySnapshot.docs[0];
       const blogData = blogDoc.data();
 
-      return blogDoc ? new Blog(blogData) : undefined;
+      return new Blog(blogData);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -101,7 +97,7 @@ class Blog {
       const q = query(
         collection(fireDB, "blogs"),
         where("ownerId", "==", ownerId),
-        where("id", "==", id) // Match the `id` field inside the document
+        where("id", "==", id) 
       );
 
       const querySnapshot = await getDocs(q);
@@ -111,8 +107,7 @@ class Blog {
         throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
       }
 
-      // Extract the document ID from Firestore (since `id` is inside the document)
-      const blogDoc = querySnapshot.docs[0]; // Only one document should match
+      const blogDoc = querySnapshot.docs[0]; 
       const docRef = doc(fireDB, "blogs", blogDoc.id);
 
       // Delete the document
@@ -163,8 +158,7 @@ class Blog {
 
       return matchingBlogs.length ? matchingBlogs : [];
     } catch (error) {
-      console.error("Error searching blogs by title pattern:", error);
-      return [];
+      console.error("Error:", error);
     }
   }
 
