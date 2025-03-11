@@ -35,3 +35,16 @@ npm run test:watch
 ```sh 
 npm run coverage
 ```
+
+# Connect to Firebase
+1. Go to bloggle project
+
+2. Click to "setting" icon near project overview, and select project settings
+
+3. Click Service accounts
+
+4. Click Generate new private key
+
+5. Save this key
+
+6. Create a firebase folder in your project, and save the key in this folder
