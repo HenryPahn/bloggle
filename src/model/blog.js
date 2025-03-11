@@ -1,7 +1,7 @@
 // Use crypto.randomUUID() to create unique IDs, see:
 // https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
-const { collection, addDoc, getDocs, query, where, setDoc, doc, deleteDoc, or } = require("firebase/firestore");
+const { collection, getDocs, query, where, setDoc, doc, deleteDoc } = require("firebase/firestore");
 const { fireDB } = require("./firestore-db"); // Import Firestore config
 
 class Blog {
