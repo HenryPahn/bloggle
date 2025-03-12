@@ -37,7 +37,7 @@ npm run coverage
 ```
 
 # Connect to Firebase
-1. Go to bloggle project
+1. in firebase console, Go to bloggle project
 
 2. Click to "setting" icon near project overview, and select project settings
 
