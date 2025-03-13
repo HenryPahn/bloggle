@@ -1,5 +1,6 @@
 // /src/mode/blogger.js
 
+const { Blog } = require('./blog');
 const { collection, query, where, getDocs, setDoc, doc } = require("firebase/firestore");
 const { fireDB } = require("./firestore-db"); 
 
@@ -25,7 +26,7 @@ class Blogger {
     this.ownerId = ownerId;
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
-    this.blogs = blogs ? blogs : [];
+    this.blogs = blogs ? blogs : Blog.byUser(ownerId);
     this.favoriteBlogs = favoriteBlogs ? favoriteBlogs : [];
     this.visitedBlogs = visitedBlogs ? visitedBlogs : []
   }
@@ -79,6 +80,8 @@ class Blogger {
         // If no document exists, create a new one
         docRef = doc(collection(fireDB, "bloggers"));
       }
+
+      this.blogs = Blog.byUser(ownerId);
   
       // Save updated Blogger data to Firestore
       await setDoc(docRef, { ...this }, { merge: true });

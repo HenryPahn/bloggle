@@ -51,7 +51,8 @@ class Blog {
       const blogSnaps = await getDocs(blogRefs);
 
       if (blogSnaps.empty) {
-        throw new Error(`No blogs found for owner: ${ownerId}`);
+        console.log(`No blogs found for owner: ${ownerId}`);
+        return [];
       }
 
       let blogIds = blogSnaps.docs.map((doc) => doc.data().id);
