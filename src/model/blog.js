@@ -1,8 +1,11 @@
+// /src/model/blog.js
+
 // Use crypto.randomUUID() to create unique IDs, see:
 // https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
 const { collection, getDocs, query, where, setDoc, doc, deleteDoc } = require("firebase/firestore");
-const { fireDB } = require("./firestore-db"); // Import Firestore config
+const { getStorage, ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+const { fireDB, storage } = require("./firestore-db"); // Import Firestore config
 
 class Blog {
   /**
@@ -11,15 +14,17 @@ class Blog {
    * @param {string} ownerId
    * @param {string} created
    * @param {string} updated
+   * @param {string} title
+   * @param {string} content
+   * @param {Array<{ originalname: String, buffer: Bytes }>} images
    */
-  constructor({ id, ownerId, created, author, updated, title, content, images = null }) {
+  constructor({ id, ownerId, created, updated, title, content, images = [] }) {
     // OwnerId and type are required. if not exist, throw an exception
     if (!ownerId) {
       throw new Error(
         `ownerId and type strings are required, got ownerId=${ownerId}`
       );
     }
-
 
     // get the current time 
     const currentDateTime = new Date().toISOString();
@@ -28,7 +33,6 @@ class Blog {
     this.id = id ? id : randomUUID();
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
-    this.author = author;
     this.title = title;
     this.content = content;
     this.images = images;
@@ -38,7 +42,7 @@ class Blog {
    * Get all blog (id or full) for the given user
    * @param {string} ownerId user's hashed email
    * @param {boolean} expand whether to expand ids to full blogs
-   * @returns Promise<Array<Blog>>
+   * @returns Promise<Array<Blog's id>>
    */
   static async byUser(ownerId) {
     try {
@@ -46,11 +50,14 @@ class Blog {
       const blogRefs = query(collection(fireDB, "blogs"), where("ownerId", "==", ownerId));
       const blogSnaps = await getDocs(blogRefs);
 
-      let blogIds = blogSnaps.docs.map((doc) => doc.data().id);
+      if (blogSnaps.empty) {
+        throw new Error(`No blogs found for owner: ${ownerId}`);
+      }
 
-      return blogSnaps.empty ? blogIds : [];
+      let blogIds = blogSnaps.docs.map((doc) => doc.data().id);
+      return blogIds;
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error getting all blogs by userId:", error);
     }
   }
 
@@ -66,7 +73,7 @@ class Blog {
       const q = query(
         collection(fireDB, "blogs"),
         where("ownerId", "==", ownerId),
-        where("id", "==", id) 
+        where("id", "==", id) // "__name__" refers to the document ID
       );
 
       const querySnapshot = await getDocs(q);
@@ -76,12 +83,13 @@ class Blog {
         throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
       }
 
+      // Extract blog data (since __name__ is unique, there will be at most 1 result)
       const blogDoc = querySnapshot.docs[0];
       const blogData = blogDoc.data();
 
-      return new Blog(blogData);
+      return blogDoc ? new Blog(blogData) : undefined;
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error getting a blog by id:", error);
     }
   }
 
@@ -89,7 +97,7 @@ class Blog {
    * Delete the user's blog for the given id
    * @param {string} ownerId user's hashed email
    * @param {string} id blog's id
-   * @returns a successful message
+   * @returns true
    */
   static async delete(ownerId, id) {
     try {
@@ -97,7 +105,7 @@ class Blog {
       const q = query(
         collection(fireDB, "blogs"),
         where("ownerId", "==", ownerId),
-        where("id", "==", id) 
+        where("id", "==", id)
       );
 
       const querySnapshot = await getDocs(q);
@@ -107,7 +115,7 @@ class Blog {
         throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
       }
 
-      const blogDoc = querySnapshot.docs[0]; 
+      const blogDoc = querySnapshot.docs[0]; // Only one document should match
       const docRef = doc(fireDB, "blogs", blogDoc.id);
 
       // Delete the document
@@ -115,7 +123,7 @@ class Blog {
 
       return true;
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error deleting a blog in firestore:", error);
     }
   }
 
@@ -149,22 +157,23 @@ class Blog {
         }
       });
 
-      querySnapshot.forEach((doc) => {
-        const blogData = doc.data();
-        if (blogData.author && blogData.author.toLowerCase().includes(searchKeyword) && category != "title" && category != "content") {
-          matchingBlogs.push(new Blog(blogData));
-        }
-      });
+      // Add and implement author later
+      // querySnapshot.forEach((doc) => {
+      //   const blogData = doc.data();
+      //   if (blogData.author && blogData.author.toLowerCase().includes(searchKeyword) && category != "title" && category != "content") {
+      //     matchingBlogs.push(new Blog(blogData));
+      //   }
+      // });
 
       return matchingBlogs.length ? matchingBlogs : [];
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error searching blogs by title pattern:", error);
     }
   }
 
   /**
   * Saves the current blog's data to the database
-  * @returns a successful message
+  * @returns blog's id
   */
   async save() {
     try {
@@ -185,12 +194,31 @@ class Blog {
         docRef = doc(collection(fireDB, "blogs"));
       }
 
-      // Set data in Firestore (merge: true to avoid overwriting)
+      if (this.localImages && this.localImages.length > 0) {
+        this.images = [];
+
+        for (const image of this.localImages) {
+          if (!image || !image.buffer) {
+            console.error("Skipping invalid image:", image);
+            continue;
+          }
+
+          // Upload image buffer to Firebase Storage
+          const storageRef = ref(storage, `blog_images/${Date.now()}_${image.originalname}`);
+          const snapshot = await uploadBytes(storageRef, image.buffer);
+          const imageUrl = await getDownloadURL(snapshot.ref);
+
+          this.images.push(imageUrl);
+        }
+
+        this.localImages = []; // Clear local buffer after upload
+      }
+
       await setDoc(docRef, { ...this }, { merge: true });
 
       return docRef.id;
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error saving a blog object to firestore:", error);
     }
   }
 
@@ -212,13 +240,21 @@ class Blog {
 
   /**
    * Set's the blog's data in the database [Or, modify an existed fragment' data]
-   * @param {Buffer} data
-   * @returns a successful message
+   * @param {string} data
+   * @param {string} data
+   * @param {Array<{ originalname: String, buffer: Bytes }>} images
+   * @returns true
    */
   async setData(title, content, images) {
-    this.title = title ? title : this.title;
-    this.content = content ? content : this.content;
-    this.images = images ? images : this.images;
+    if (!title && !content && (!images || images.length === 0)) {
+      throw new Error(`The data isn't changed,  title=${title}, content=${content}, images=${images}`);
+    }
+
+    this.title = title;
+    this.content = content;
+    this.localImages = images;
+
+    return true;
   }
 }
 
