@@ -10,7 +10,7 @@ const path = require('path');
 //   content: "This is my not blog post on the platform.",
 // };
 
-async function test() {
+async function testBlog() {
   try {
     // save a data to blog
     // const newBlog = new Blog(blogPost)
@@ -60,4 +60,42 @@ async function test() {
   }
 }
 
-test()
+testBlog()
+
+
+async function testBlogger() {
+  try {
+    const blogger = new Blogger({
+      ownerId: "user1234",
+      blogs: ["blog1", "blog2"],
+      favoriteBlogs: ["blog3"],
+      visitedBlogs: ["blog4"]
+    });
+
+    // console.log(blogger.getFavouriteBlogs());
+
+    //  blogger.addFavoriteBlog("blog4");
+    
+    //  blogger.deleteFavoriteBlog("blog3");
+
+    // console.log(blogger.getFavouriteBlogs());
+
+    // console.log(blogger.getVisitedBlogs());
+
+    //  blogger.addVisitedBlog("blog5");
+    
+    //  blogger.deleteVisitedBlog("blog4");
+
+    // console.log(blogger.getVisitedBlogs());
+
+    // const docId = await blogger.save();
+    
+    
+    const data = await Blogger.byUser("user1234");
+    console.log(data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+testBlogger();
