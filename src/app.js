@@ -15,6 +15,9 @@ const pino = require('pino-http')({
 // Create an express app instance we can use to attach middleware and HTTP routes
 const app = express();
 
+// Ensures req.body is parsed as JSON before the route handling
+app.use(express.json());
+
 // Use pino logging middleware
 app.use(pino);
 
