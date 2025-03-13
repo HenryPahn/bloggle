@@ -10,7 +10,7 @@ class Blogger {
    * @param {string} created
    * @param {string} updated
    */
-  constructor({ id, ownerId, created, updated }) {
+  constructor({ id, ownerId, created, updated, favoriteBlogs, visitedBlogs}) {
     // OwnerId and type are required. if not exist, throw an exception
     if (!ownerId) {
       throw new Error(
@@ -25,6 +25,8 @@ class Blogger {
     this.id = id ? id : randomUUID();
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
+    this.favoriteBlogs = favoriteBlogs ? favoriteBlogs : []; 
+    this.visitedBlogs = visitedBlogs ? visitedBlogs : []
   }
 
   /**
@@ -47,7 +49,7 @@ class Blogger {
   // }
 
   /**
-   * Add a blog id to favorite blog list in the database
+   * Add a blog id to favorite blog list 
    * @param {string} blogId
    * @returns a successful message
    */
