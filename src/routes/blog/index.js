@@ -5,6 +5,9 @@ const express = require('express');
 // Create a router on which to mount our API endpoints
 const router = express.Router();
 
+// POST /blogger/ -> Create Blog
+router.post('/', require('./post'));
+
 // GET /blogger/
 //router.get(`/`, require('./get')); 
 
