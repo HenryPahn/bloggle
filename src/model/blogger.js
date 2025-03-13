@@ -81,7 +81,7 @@ class Blogger {
         docRef = doc(collection(fireDB, "bloggers"));
       }
 
-      this.blogs = Blog.byUser(ownerId);
+      this.blogs = Blog.byUser(this.ownerId);
   
       // Save updated Blogger data to Firestore
       await setDoc(docRef, { ...this }, { merge: true });
