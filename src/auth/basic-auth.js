@@ -10,7 +10,8 @@ if (!process.env.HTPASSWD_FILE) {
   throw new Error('missing expected env var: HTPASSWD_FILE');
 }
 
-
+const logger = require('../logger');
+logger.info('Using HTTP Basic Auth for auth');
 
 module.exports.strategy = () =>
   // For our Passport authentication strategy, we'll look for a
