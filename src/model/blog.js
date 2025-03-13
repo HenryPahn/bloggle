@@ -4,7 +4,7 @@
 // https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
 const { collection, getDocs, query, where, setDoc, doc, deleteDoc } = require("firebase/firestore");
-const { getStorage, ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
 const { fireDB, storage } = require("./firestore-db"); // Import Firestore config
 
 class Blog {
