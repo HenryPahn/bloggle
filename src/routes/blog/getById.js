@@ -9,6 +9,7 @@ module.exports = async (req, res) => {
     const ownerId = req.user;
     const { id } = req.params;
 
+    logger.info(`GET /blog/:id - Incoming request to fetch a blog post`);
     const blog = await Blog.byId(ownerId, id);
 
     // Check if blog is null or undefined
