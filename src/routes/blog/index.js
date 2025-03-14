@@ -6,11 +6,14 @@ const express = require('express');
 const router = express.Router();
 
 /* CRUD Routes */
-// POST /blogger/ -> Create a new blog post
+// POST /blog -> Create a new blog post
 router.post(`/`, require('./post'));
 
-// GET /blogger/ -> Retrieve all blog posts
+// GET /blog -> Retrieve all blog posts for the current user
 router.get(`/`, require('./get'));
+
+// GET /blog/:id -> Retrieve a single blog post with id, returns blog post details
+router.get(`/:id`, require('./getById'));
 
 // -----------------------------------------
 // Other routes (POST, DELETE, etc.) for favourite blogs will go here later on...
