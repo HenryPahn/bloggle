@@ -9,6 +9,9 @@ const router = express.Router();
 // POST /blog -> Create a new blog post
 router.post(`/`, require('./post'));
 
+// PUT /blog/:id -> Update the user's own existing blog post with blog id
+router.put(`/:id`, require('./put'))
+
 // GET /blog -> Retrieve all blog posts for the current user
 router.get(`/`, require('./get'));
 
