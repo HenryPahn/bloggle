@@ -18,7 +18,7 @@ class Blog {
    * @param {string} content
    * @param {Array<{ originalname: String, buffer: Bytes }>} images
    */
-  constructor({ id, ownerId, created, updated, title, content, images = [] }) {
+  constructor({ id, ownerId, created, updated, title, content, images }) {
     // OwnerId and type are required. if not exist, throw an exception
     if (!ownerId) {
       throw new Error(
@@ -33,9 +33,9 @@ class Blog {
     this.id = id ? id : randomUUID();
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
-    this.title = title;
-    this.content = content;
-    this.images = images;
+    this.title = title ? title : undefined;
+    this.content = content ? content : undefined;
+    this.images = images ? images : undefined;
   }
 
   /**
