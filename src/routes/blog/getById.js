@@ -19,8 +19,8 @@ module.exports = async (req, res) => {
     }
 
     // Blog Post found
-    logger.info({ blog }, 'GET /blog/:id - Retrieved blog post successfully');
-    return res.status(200).json(createSuccessResponse({ blog }));
+    logger.info({ blog: blog.getData() }, 'GET /blog/:id - Retrieved blog post successfully');
+    return res.status(200).json(createSuccessResponse({ blog: blog.getData() }));
   } catch (err) {
     logger.error({ errMessage: err.message }, 'GET /blog/:id - Internal Server Error');
     return res.status(500).json(createErrorResponse(500, `Internal Server Error`));

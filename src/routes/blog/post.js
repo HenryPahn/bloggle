@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
       { blogId: blog.id, ownerId: hashedEmail },
       'POST /blog - Blog created successfully'
     );
-    return res.status(201).json(createSuccessResponse({ blog }));
+    return res.status(201).json(createSuccessResponse({ blog: blog.getData() }));
   } catch (err) {
     logger.error({ message: err.message }, 'POST /blog - Error creating a blog');
     return res.status(500).json(createErrorResponse(500, `Internal Server Error`));
