@@ -27,14 +27,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Get Firestore secrets
-        run: |
-          echo "The secret is $MY_SECRET"
-        env: 
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
-
       # https://github.com/actions/setup-node
       - name: Setup node
         uses: actions/setup-node@v4
@@ -54,6 +46,10 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env: 
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
     steps:
       - name: Check out code
         uses: actions/checkout@v4
