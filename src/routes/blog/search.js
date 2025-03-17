@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
       return res.status(200).json(createSuccessResponse({ blogs }));
     } else {
       logger.info({}, 'GET /blog/search - No matching blogs found');
-      return res.status(200).json(createSuccessResponse({ message: 'No matching blogs found' }));
+      return res.status(400).json(createErrorResponse(400, 'No matching blog found'));
     }
   } catch (error) {
     logger.error({ errMessage: error.message }, 'GET /blog/search - Error searching blog');
