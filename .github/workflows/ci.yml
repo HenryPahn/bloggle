@@ -46,10 +46,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    env: 
-      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
+    
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -61,6 +58,10 @@ jobs:
           cache: 'npm'
 
       - name: Install node dependencies and run Tests
+        env: 
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
         # There are two ways we could do this:
         #
         # 1. Call `npm ci` followed by `npm test` like so (NOTE: the use of | and -):
