@@ -21,14 +21,19 @@ jobs:
     # We'll run this on a Linux (Ubuntu) VM, since we'll deploy on Linux too.
     runs-on: ubuntu-latest
     # We run these steps one after the other, and if any fail, we stop the process
-    env: 
-      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
+    
     steps:
       # https://github.com/actions/checkout
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: Get Firestore secrets
+        run: |
+          echo "The secret is $MY_SECRET"
+        env: 
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
 
       # https://github.com/actions/setup-node
       - name: Setup node
