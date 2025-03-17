@@ -1,8 +1,8 @@
 // /src/mode/blogger.js
 
 const { Blog } = require('./blog');
-const { collection, query, where, getDocs, setDoc, doc } = require("firebase/firestore");
-const { fireDB } = require("./firestore-db"); 
+const { fireDB } = require("./firestore-db");
+const logger = require("../logger")
 
 class Blogger {
   /**
@@ -26,9 +26,9 @@ class Blogger {
     this.ownerId = ownerId;
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
-    this.blogs = blogs ? blogs : Blog.byUser(ownerId);
+    this.blogs = blogs ? blogs : [];
     this.favoriteBlogs = favoriteBlogs ? favoriteBlogs : [];
-    this.visitedBlogs = visitedBlogs ? visitedBlogs : []
+    this.visitedBlogs = visitedBlogs ? visitedBlogs : [];
   }
 
   /**
@@ -41,8 +41,10 @@ class Blogger {
         throw new Error("Owner ID is required.");
       }
 
-      const q = query(collection(fireDB, "bloggers"), where("ownerId", "==", ownerId));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await fireDB
+        .collection("bloggers")
+        .where("ownerId", "==", ownerId)
+        .get();
 
       if (querySnapshot.empty) {
         throw new Error(`No blogger found with ownerId: ${ownerId}`);
@@ -51,9 +53,10 @@ class Blogger {
       const bloggerDoc = querySnapshot.docs[0];
       const bloggerData = bloggerDoc.data();
 
-      return bloggerDoc ? new Blogger(bloggerData) : undefined;
+      return new Blogger(bloggerData);
     } catch (error) {
-      console.error("Error fetching Blogger by ownerId:", error);
+      logger.error("Error fetching Blogger by ownerId:", error);
+      return error;
     }
   }
 
@@ -65,31 +68,39 @@ class Blogger {
     try {
       const currentDateTime = new Date().toISOString();
       this.updated = currentDateTime;
-  
+
       // Query Firestore to check if the blogger exists
-      const q = query(collection(fireDB, "bloggers"), where("ownerId", "==", this.ownerId));
-      const querySnapshot = await getDocs(q);
-  
+      const querySnapshot = await fireDB
+        .collection("bloggers")
+        .where("ownerId", "==", this.ownerId)
+        .get();
+
       let docRef;
-  
       if (!querySnapshot.empty) {
-        // If a document exists, use its Firestore document ID
         const existingDoc = querySnapshot.docs[0];
-        docRef = doc(fireDB, "bloggers", existingDoc.id);
+        docRef = fireDB.collection("bloggers").doc(existingDoc.id);
       } else {
-        // If no document exists, create a new one
-        docRef = doc(collection(fireDB, "bloggers"));
+        docRef = fireDB.collection("bloggers").doc();
       }
 
-      this.blogs = Blog.byUser(this.ownerId);
-  
-      // Save updated Blogger data to Firestore
-      await setDoc(docRef, { ...this }, { merge: true });
-  
+      this.blogs = await Blog.byUser(this.ownerId);
+
+      await docRef.set({ ...this }, { merge: true });
       return docRef.id;
     } catch (error) {
-      console.error("Error saving Blogger:", error);
-      throw error;
+      logger.error("Error saving Blogger:", error);
+      return error;
+    }
+  }
+
+  getData() {
+    return {
+      ownerId: this.ownerId,
+      created: this.created,
+      updated: this.updated,
+      blogs: this.blogs,
+      favoriteBlogs: this.favoriteBlogs,
+      visitedBlogs: this.visitedBlogs 
     }
   }
 

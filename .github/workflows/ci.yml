@@ -20,15 +20,8 @@ jobs:
     name: ESLint
     # We'll run this on a Linux (Ubuntu) VM, since we'll deploy on Linux too.
     runs-on: ubuntu-latest
-    env:
-      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-      FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
-      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-      FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
     # We run these steps one after the other, and if any fail, we stop the process
+    
     steps:
       # https://github.com/actions/checkout
       - name: Check out code
@@ -53,6 +46,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -62,6 +56,17 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'npm'
+
+      - name: Set up environment variables
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
+        run: |
+            echo "FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT" >> .env
+            echo "DATABASE_URL=$DATABASE_URL" >> .env
+            echo "STORAGE_BUCKET=$STORAGE_BUCKET" >> .env
+  
 
       - name: Install node dependencies and run Tests
         # There are two ways we could do this:
