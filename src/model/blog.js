@@ -3,9 +3,8 @@
 // Use crypto.randomUUID() to create unique IDs, see:
 // https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
-const { collection, getDocs, query, where, setDoc, doc, deleteDoc } = require("firebase/firestore");
-const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
 const { fireDB, storage } = require("./firestore-db"); // Import Firestore config
+const logger = require("../logger")
 
 class Blog {
   /**
@@ -33,9 +32,9 @@ class Blog {
     this.id = id ? id : randomUUID();
     this.created = created ? created : currentDateTime;
     this.updated = updated ? updated : currentDateTime;
-    this.title = title ? title : undefined;
-    this.content = content ? content : undefined;
-    this.images = images ? images : undefined;
+    this.title = title ? title : null;
+    this.content = content ? content : null;
+    this.images = images ? images : null;
   }
 
   /**
@@ -46,21 +45,27 @@ class Blog {
    */
   static async byUser(ownerId) {
     try {
-      // Query Firestore to find all blogs where ownerId matches
-      const blogRefs = query(collection(fireDB, "blogs"), where("ownerId", "==", ownerId));
-      const blogSnaps = await getDocs(blogRefs);
+      if (!ownerId) {
+        throw new Error("Owner ID is required.");
+      }
 
-      if (blogSnaps.empty) {
-        console.log(`No blogs found for owner: ${ownerId}`);
+      const querySnapshot = await fireDB.collection("blogs").where("ownerId", "==", ownerId).get();
+
+      if (querySnapshot.empty) {
+        logger.debug(`No blogs found for owner: ${ownerId}`);
         return [];
       }
 
-      let blogIds = blogSnaps.docs.map((doc) => doc.data().id);
+      let blogIds = querySnapshot.docs
+                      .map((doc) => doc.data().id)
+                      .filter((id) => id !== undefined);
       return blogIds;
     } catch (error) {
-      console.error("Error getting all blogs by userId:", error);
+      logger.error("Error getting all blogs by userId:", error);
+      return error;
     }
   }
+
 
   /**
    * Gets a blog for the user by the given id.
@@ -70,29 +75,30 @@ class Blog {
    */
   static async byId(ownerId, id) {
     try {
-      // Query Firestore where both ownerId and document ID match
-      const q = query(
-        collection(fireDB, "blogs"),
-        where("ownerId", "==", ownerId),
-        where("id", "==", id) // "__name__" refers to the document ID
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      // If no documents found, return null
-      if (querySnapshot.empty) {
-        throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
+      if (!ownerId || !id) {
+        throw new Error("Owner ID and Blog ID are required.");
       }
 
-      // Extract blog data (since __name__ is unique, there will be at most 1 result)
+      const querySnapshot = await fireDB
+        .collection("blogs")
+        .where("ownerId", "==", ownerId)
+        .where("id", "==", id)
+        .get();
+
+      if (querySnapshot.empty) {
+        throw new Error(`No blog found with: ${ownerId} with ID ${id}`);
+      }
+
       const blogDoc = querySnapshot.docs[0];
       const blogData = blogDoc.data();
 
-      return blogDoc ? new Blog(blogData) : undefined;
+      return blogData ? new Blog(blogData) : undefined;
     } catch (error) {
-      console.error("Error getting a blog by id:", error);
+      logger.error("Error getting a blog by id:", error);
+      return error;
     }
   }
+
 
   /**
    * Delete the user's blog for the given id
@@ -102,29 +108,27 @@ class Blog {
    */
   static async delete(ownerId, id) {
     try {
-      // Query Firestore where both ownerId and id (inside document) match
-      const q = query(
-        collection(fireDB, "blogs"),
-        where("ownerId", "==", ownerId),
-        where("id", "==", id)
-      );
+      if (!ownerId || !id) {
+        throw new Error("Owner ID and Blog ID are required.");
+      }
 
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await fireDB
+        .collection("blogs")
+        .where("ownerId", "==", ownerId)
+        .where("id", "==", id)
+        .get();
 
-      // If no matching document is found, return a message
       if (querySnapshot.empty) {
         throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
       }
 
-      const blogDoc = querySnapshot.docs[0]; // Only one document should match
-      const docRef = doc(fireDB, "blogs", blogDoc.id);
-
-      // Delete the document
-      await deleteDoc(docRef);
+      const blogDoc = querySnapshot.docs[0];
+      await fireDB.collection("blogs").doc(blogDoc.id).delete();
 
       return true;
     } catch (error) {
-      console.error("Error deleting a blog in firestore:", error);
+      logger.error("Error deleting a blog in firestore:", error);
+      return error;
     }
   }
 
@@ -136,39 +140,31 @@ class Blog {
    */
   static async search(keyword, category = null) {
     try {
-      // Trim and ensure keyword is properly formatted
-      const searchKeyword = keyword.trim().toLowerCase();
+      if (!keyword) {
+        throw new Error("Keyword is required.");
+      }
 
-      // Fetch all blogs (Firestore does not support substring search directly)
-      const querySnapshot = await getDocs(collection(fireDB, "blogs"));
+      const searchKeyword = keyword.trim().toLowerCase();
+      const querySnapshot = await fireDB.collection("blogs").get();
 
       let matchingBlogs = [];
 
       querySnapshot.forEach((doc) => {
         const blogData = doc.data();
-        if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content" && category != "author") {
+        if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content") {
+          matchingBlogs.push(new Blog(blogData));
+          return;
+        }
+
+        if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title") {
           matchingBlogs.push(new Blog(blogData));
         }
       });
-
-      querySnapshot.forEach((doc) => {
-        const blogData = doc.data();
-        if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title" && category != "author") {
-          matchingBlogs.push(new Blog(blogData));
-        }
-      });
-
-      // Add and implement author later
-      // querySnapshot.forEach((doc) => {
-      //   const blogData = doc.data();
-      //   if (blogData.author && blogData.author.toLowerCase().includes(searchKeyword) && category != "title" && category != "content") {
-      //     matchingBlogs.push(new Blog(blogData));
-      //   }
-      // });
 
       return matchingBlogs.length ? matchingBlogs : [];
     } catch (error) {
-      console.error("Error searching blogs by title pattern:", error);
+      logger.error("Error searching blogs by title pattern:", error);
+      return error;
     }
   }
 
@@ -181,18 +177,15 @@ class Blog {
       const currentDateTime = new Date().toISOString();
       this.updated = currentDateTime;
 
-      const q = query(collection(fireDB, "blogs"), where("id", "==", this.id));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await fireDB.collection("blogs").where("id", "==", this.id).get();
 
       let docRef;
 
       if (!querySnapshot.empty) {
-        // If a document with the same `id` exists, use its Firestore document ID
         const existingDoc = querySnapshot.docs[0];
-        docRef = doc(fireDB, "blogs", existingDoc.id);
+        docRef = fireDB.collection("blogs").doc(existingDoc.id);
       } else {
-        // If no document exists, create a new document using Firestore-generated ID
-        docRef = doc(collection(fireDB, "blogs"));
+        docRef = fireDB.collection("blogs").doc();
       }
 
       if (this.localImages && this.localImages.length > 0) {
@@ -204,22 +197,22 @@ class Blog {
             continue;
           }
 
-          // Upload image buffer to Firebase Storage
-          const storageRef = ref(storage, `blog_images/${Date.now()}_${image.originalname}`);
-          const snapshot = await uploadBytes(storageRef, image.buffer);
-          const imageUrl = await getDownloadURL(snapshot.ref);
+          const storageRef = storage.bucket().file(`blog_images/${Date.now()}_${image.originalname}`);
+          await storageRef.save(image.buffer);
 
+          const imageUrl = `https://storage.googleapis.com/${storageRef.bucket.name}/${storageRef.name}`;
           this.images.push(imageUrl);
         }
 
-        this.localImages = []; // Clear local buffer after upload
+        this.localImages = []; 
       }
 
-      await setDoc(docRef, { ...this }, { merge: true });
+      await docRef.set({ ...this }, { merge: true });
 
       return docRef.id;
     } catch (error) {
-      console.error("Error saving a blog object to firestore:", error);
+      logger.error("Error saving a blog object to firestore:", error);
+      return error;
     }
   }
 
@@ -246,7 +239,7 @@ class Blog {
    * @param {Array<{ originalname: String, buffer: Bytes }>} images
    * @returns true
    */
-  async setData(title, content, images) {
+  setData(title, content, images) {
     if (!title && !content && (!images || images.length === 0)) {
       throw new Error(`The data isn't changed,  title=${title}, content=${content}, images=${images}`);
     }
