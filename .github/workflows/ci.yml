@@ -57,11 +57,18 @@ jobs:
           node-version: 'lts/*'
           cache: 'npm'
 
-      - name: Install node dependencies and run Tests
-        env: 
+      - name: Set up environment variables
+        env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           STORAGE_BUCKET: ${{ secrets.STORAGE_BUCKET }}
+        run: |
+            echo "FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT" >> .env
+            echo "DATABASE_URL=$DATABASE_URL" >> .env
+            echo "STORAGE_BUCKET=$STORAGE_BUCKET" >> .env
+  
+
+      - name: Install node dependencies and run Tests
         # There are two ways we could do this:
         #
         # 1. Call `npm ci` followed by `npm test` like so (NOTE: the use of | and -):
