@@ -2,7 +2,6 @@
 
 const { Blog } = require('./blog');
 const { fireDB } = require("./firestore-db");
-const logger = require("../logger")
 
 class Blogger {
   /**
@@ -36,28 +35,23 @@ class Blogger {
   * @returns a successful message
   */
   static async byUser(ownerId) {
-    try {
-      if (!ownerId) {
-        throw new Error("Owner ID is required.");
-      }
-
-      const querySnapshot = await fireDB
-        .collection("bloggers")
-        .where("ownerId", "==", ownerId)
-        .get();
-
-      if (querySnapshot.empty) {
-        throw new Error(`No blogger found with ownerId: ${ownerId}`);
-      }
-
-      const bloggerDoc = querySnapshot.docs[0];
-      const bloggerData = bloggerDoc.data();
-
-      return new Blogger(bloggerData);
-    } catch (error) {
-      logger.error("Error fetching Blogger by ownerId:", error);
-      return error;
+    if (!ownerId) {
+      throw new Error("Owner ID is required.");
     }
+
+    const querySnapshot = await fireDB
+      .collection("bloggers")
+      .where("ownerId", "==", ownerId)
+      .get();
+
+    if (querySnapshot.empty) {
+      throw new Error(`No blogger found with ownerId: ${ownerId}`);
+    }
+
+    const bloggerDoc = querySnapshot.docs[0];
+    const bloggerData = bloggerDoc.data();
+
+    return new Blogger(bloggerData);
   }
 
   /**
@@ -65,32 +59,27 @@ class Blogger {
   * @returns a successful message
   */
   async save() {
-    try {
-      const currentDateTime = new Date().toISOString();
-      this.updated = currentDateTime;
+    const currentDateTime = new Date().toISOString();
+    this.updated = currentDateTime;
 
-      // Query Firestore to check if the blogger exists
-      const querySnapshot = await fireDB
-        .collection("bloggers")
-        .where("ownerId", "==", this.ownerId)
-        .get();
+    // Query Firestore to check if the blogger exists
+    const querySnapshot = await fireDB
+      .collection("bloggers")
+      .where("ownerId", "==", this.ownerId)
+      .get();
 
-      let docRef;
-      if (!querySnapshot.empty) {
-        const existingDoc = querySnapshot.docs[0];
-        docRef = fireDB.collection("bloggers").doc(existingDoc.id);
-      } else {
-        docRef = fireDB.collection("bloggers").doc();
-      }
-
-      this.blogs = await Blog.byUser(this.ownerId);
-
-      await docRef.set({ ...this }, { merge: true });
-      return docRef.id;
-    } catch (error) {
-      logger.error("Error saving Blogger:", error);
-      return error;
+    let docRef;
+    if (!querySnapshot.empty) {
+      const existingDoc = querySnapshot.docs[0];
+      docRef = fireDB.collection("bloggers").doc(existingDoc.id);
+    } else {
+      docRef = fireDB.collection("bloggers").doc();
     }
+
+    this.blogs = await Blog.byUser(this.ownerId);
+
+    await docRef.set({ ...this }, { merge: true });
+    return docRef.id;
   }
 
   getData() {
@@ -100,7 +89,7 @@ class Blogger {
       updated: this.updated,
       blogs: this.blogs,
       favoriteBlogs: this.favoriteBlogs,
-      visitedBlogs: this.visitedBlogs 
+      visitedBlogs: this.visitedBlogs
     }
   }
 
