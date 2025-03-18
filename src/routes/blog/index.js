@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(`/`, require('./post'));
 
 // PUT /blog/:id -> Update the user's own existing blog post with blog id
-router.put(`/:id`, require('./put'))
+router.put(`/:id`, require('./put'));
 
 // GET /blog -> Retrieve all blog posts for the current user
 router.get(`/`, require('./get'));
@@ -23,10 +23,9 @@ router.get(`/:id`, require('./getById'));
 router.delete(`/:id`, require('./delete'));
 
 // -----------------------------------------
-// Other routes (POST, DELETE, etc.) for favourite blogs will go here later on...
+/* Search Functionality Routes */
+//  GET /blog/search
+router.get(`/search`, require('./search'));
 
-
-
-// Other routes (POST, DELETE, etc.) for visited blogs will go here later on...
-
+// -----------------------------------------
 module.exports = router;
