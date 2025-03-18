@@ -15,7 +15,7 @@ const router = express.Router();
 router.use(`/blog`,authenticate(), require('./blog'));
 
 // Blogger routes
-// router.use(`/blogger`, authenticate(), require('./blogger'));
+router.use(`/blogger`, authenticate(), require('./blogger'));
 
 // a simple health check route
 router.get('/', (req, res) => {

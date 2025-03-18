@@ -100,7 +100,7 @@ class Blogger {
    * Get all favorite blogs (id or full) for the given user
    * @returns Promise<Array<Blog's id>>
    */
-  getFavouriteBlogs() {
+  getFavoriteBlogs() {
     return this.favoriteBlogs;
   }
 
