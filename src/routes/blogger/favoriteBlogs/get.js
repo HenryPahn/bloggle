@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
     logger.info(`GET /blogger/favorite - Incoming request to fetch user's favorite blog post list`);
 
     const blogger = await Blogger.byUser(ownerId);
-    const favorites = blogger.getFavoriteBlogs();
+    const favorites = blogger.getFavouriteBlogs();
 
     logger.debug(
       { ownerId, favorites },

@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
 
     // If error occurs, the blogger class will throw
     const blogger = await Blogger.byUser(ownerId);
-    const favorites = blogger.getFavoriteBlogs();
+    const favorites = blogger.getFavouriteBlogs();
     logger.debug(
       { ownerId, favorites },
       `DELETE /blogger/favorite/:id - The user's favorites list before removal`
@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
 
     await blogger.deleteFavoriteBlog(blogId);
     await blogger.save();
-    const favoritesUpdated = blogger.getFavoriteBlogs();
+    const favoritesUpdated = blogger.getFavouriteBlogs();
 
     logger.debug(
       { ownerId, removeBid: blogId, UpdatedFavorites: favoritesUpdated },
