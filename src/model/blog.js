@@ -47,15 +47,11 @@ class Blog {
       throw new Error("Owner ID is required.");
     }
 
-    try {
-      const querySnapshot = await fireDB.collection("blogs").where("ownerId", "==", ownerId).get();
+    const querySnapshot = await fireDB.collection("blogs").where("ownerId", "==", ownerId).get();
 
-      let blogIds = querySnapshot.docs.map((doc) => doc.data().id).filter((id) => id !== undefined);
+    let blogIds = querySnapshot.docs.map((doc) => doc.data().id).filter((id) => id !== undefined);
 
-      return !querySnapshot.empty ? blogIds : [];
-    } catch (error) {
-      throw error;
-    }
+    return !querySnapshot.empty ? blogIds : [];
   }
 
 
@@ -70,24 +66,20 @@ class Blog {
       throw new Error("Owner ID and Blog ID are required.");
     }
 
-    try {
-      const querySnapshot = await fireDB
-        .collection("blogs")
-        .where("ownerId", "==", ownerId)
-        .where("id", "==", id)
-        .get();
+    const querySnapshot = await fireDB
+      .collection("blogs")
+      .where("ownerId", "==", ownerId)
+      .where("id", "==", id)
+      .get();
 
-      if (querySnapshot.empty) {
-        throw new Error(`No blog found with: ${ownerId} with ID ${id}`);
-      }
-
-      const blogDoc = querySnapshot.docs[0];
-      const blogData = blogDoc.data();
-
-      return blogData ? new Blog(blogData) : undefined;
-    } catch (error) {
-      throw error;
+    if (querySnapshot.empty) {
+      throw new Error(`No blog found with: ${ownerId} with ID ${id}`);
     }
+
+    const blogDoc = querySnapshot.docs[0];
+    const blogData = blogDoc.data();
+
+    return blogData ? new Blog(blogData) : undefined;
   }
 
 
@@ -102,24 +94,20 @@ class Blog {
       throw new Error("Owner ID and Blog ID are required.");
     }
 
-    try {
-      const querySnapshot = await fireDB
-        .collection("blogs")
-        .where("ownerId", "==", ownerId)
-        .where("id", "==", id)
-        .get();
+    const querySnapshot = await fireDB
+      .collection("blogs")
+      .where("ownerId", "==", ownerId)
+      .where("id", "==", id)
+      .get();
 
-      if (querySnapshot.empty) {
-        throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
-      }
-
-      const blogDoc = querySnapshot.docs[0];
-      await fireDB.collection("blogs").doc(blogDoc.id).delete();
-
-      return true;
-    } catch (error) {
-      throw error;
+    if (querySnapshot.empty) {
+      throw new Error(`No blog found for owner: ${ownerId} with ID ${id}`);
     }
+
+    const blogDoc = querySnapshot.docs[0];
+    await fireDB.collection("blogs").doc(blogDoc.id).delete();
+
+    return true;
   }
 
   /**
@@ -133,28 +121,24 @@ class Blog {
       throw new Error("Keyword is required.");
     }
 
-    try {
-      const searchKeyword = keyword.trim().toLowerCase();
-      const querySnapshot = await fireDB.collection("blogs").get();
+    const searchKeyword = keyword.trim().toLowerCase();
+    const querySnapshot = await fireDB.collection("blogs").get();
 
-      let matchingBlogs = [];
+    let matchingBlogs = [];
 
-      querySnapshot.forEach((doc) => {
-        const blogData = doc.data();
-        if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content") {
-          matchingBlogs.push(new Blog(blogData));
-          return;
-        }
+    querySnapshot.forEach((doc) => {
+      const blogData = doc.data();
+      if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content") {
+        matchingBlogs.push(new Blog(blogData));
+        return;
+      }
 
-        if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title") {
-          matchingBlogs.push(new Blog(blogData));
-        }
-      });
+      if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title") {
+        matchingBlogs.push(new Blog(blogData));
+      }
+    });
 
-      return matchingBlogs.length ? matchingBlogs : [];
-    } catch (error) {
-      throw error;
-    }
+    return matchingBlogs;
   }
 
   /**
@@ -162,45 +146,41 @@ class Blog {
   * @returns blog's id
   */
   async save() {
-    try {
-      const currentDateTime = new Date().toISOString();
-      this.updated = currentDateTime;
+    const currentDateTime = new Date().toISOString();
+    this.updated = currentDateTime;
 
-      const querySnapshot = await fireDB.collection("blogs").where("id", "==", this.id).get();
+    const querySnapshot = await fireDB.collection("blogs").where("id", "==", this.id).get();
 
-      let docRef;
+    let docRef;
 
-      if (!querySnapshot.empty) {
-        const existingDoc = querySnapshot.docs[0];
-        docRef = fireDB.collection("blogs").doc(existingDoc.id);
-      } else {
-        docRef = fireDB.collection("blogs").doc();
-      }
+    if (!querySnapshot.empty) {
+      const existingDoc = querySnapshot.docs[0];
+      docRef = fireDB.collection("blogs").doc(existingDoc.id);
+    } else {
+      docRef = fireDB.collection("blogs").doc();
+    }
 
-      if (this.localImages && this.localImages.length > 0) {
-        this.images = [];
+    if (this.localImages && this.localImages.length > 0) {
+      this.images = [];
 
-        for (const image of this.localImages) {
-          if (!image || !image.buffer) {
-            continue;
-          }
-
-          const storageRef = storage.bucket().file(`blog_images/${Date.now()}_${image.originalname}`);
-          await storageRef.save(image.buffer);
-
-          const imageUrl = `https://storage.googleapis.com/${storageRef.bucket.name}/${storageRef.name}`;
-          this.images.push(imageUrl);
+      for (const image of this.localImages) {
+        if (!image || !image.buffer) {
+          continue;
         }
 
-        this.localImages = []; 
+        const storageRef = storage.bucket().file(`blog_images/${Date.now()}_${image.originalname}`);
+        await storageRef.save(image.buffer);
+
+        const imageUrl = `https://storage.googleapis.com/${storageRef.bucket.name}/${storageRef.name}`;
+        this.images.push(imageUrl);
       }
 
-      await docRef.set({ ...this }, { merge: true });
-
-      return docRef.id;
-    } catch (error) {
-      throw error;
+      this.localImages = [];
     }
+
+    await docRef.set({ ...this }, { merge: true });
+
+    return docRef.id;
   }
 
   /**
