@@ -33,7 +33,7 @@ class Blog {
     this.updated = updated ? updated : currentDateTime;
     this.title = title ? title : null;
     this.content = content ? content : null;
-    this.images = images ? images : null;
+    this.images = images ? images : [];
   }
 
   /**
@@ -47,11 +47,15 @@ class Blog {
       throw new Error("Owner ID is required.");
     }
 
-    const querySnapshot = await fireDB.collection("blogs").where("ownerId", "==", ownerId).get();
+    const querySnapshot = await fireDB
+    .collection("blogs")
+    .where("ownerId", "==", ownerId)
+    .orderBy("created", "desc")
+    .get();
+  
+    let blogIds = querySnapshot.docs.map((doc) => doc.data().id);
 
-    let blogIds = querySnapshot.docs.map((doc) => doc.data().id).filter((id) => id !== undefined);
-
-    return !querySnapshot.empty ? blogIds : [];
+    return blogIds;
   }
 
 
@@ -122,7 +126,7 @@ class Blog {
     }
 
     const searchKeyword = keyword.trim().toLowerCase();
-    const querySnapshot = await fireDB.collection("blogs").get();
+    const querySnapshot = await fireDB.collection("blogs").orderBy("created", "desc").get();
 
     let matchingBlogs = [];
 
@@ -178,9 +182,19 @@ class Blog {
       this.localImages = [];
     }
 
-    await docRef.set({ ...this }, { merge: true });
+    const blogData = {
+      id: this.id,
+      ownerId: this.ownerId,
+      created: this.created,
+      updated: this.updated,
+      title: this.title,
+      content: this.content,
+      images: this.images,
+    }
 
-    return docRef.id;
+    await docRef.set(blogData, { merge: true });
+
+    return this.id;
   }
 
   /**
