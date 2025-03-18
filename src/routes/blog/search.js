@@ -1,5 +1,3 @@
-// src/routes/blog/search.js
-
 const { Blog } = require('../../model/blog');
 const { createSuccessResponse, createErrorResponse } = require('../../response');
 const logger = require('../../logger');
