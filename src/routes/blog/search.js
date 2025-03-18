@@ -16,15 +16,10 @@ module.exports = async (req, res) => {
     // Searching for blogs based on the provided keyword and category
     const blogs = await Blog.search(keyword, category);
 
-    if (blogs.length > 0) { // If blogs are found
-      blogs.sort((a, b) => new Date(b.created) - new Date(a.created)); // Sorting blogs by creation date (latest first)
+    blogs.sort((a, b) => new Date(b.created) - new Date(a.created)); // Sorting blogs by creation date (latest first)
       
-      logger.info({ blogsCount: blogs.length }, 'GET /blog/search - Blogs retrieved successfully');
-      return res.status(200).json(createSuccessResponse({ blogs }));
-    } else {
-      logger.info({}, 'GET /blog/search - No matching blogs found');
-      return res.status(200).json(createSuccessResponse({ blogs: [] }));
-    }
+    logger.info({ blogsCount: blogs.length }, 'GET /blog/search - Blogs retrieved successfully');
+    return res.status(200).json(createSuccessResponse({ blogs: blogs }));
   } catch (error) {
     logger.error({ errMessage: error.message }, 'GET /blog/search - Error searching blog');
     return res.status(500).json(createErrorResponse(500, 'Interval Server Error'));
