@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     );
 
     const blogger = await Blogger.byUser(ownerId);
-    const favorites = blogger.getFavoriteBlogs();
+    const favorites = blogger.getFavouriteBlogs();
     logger.debug(
       { ownerId, favorites },
       `PUT /blogger/favorite/:id - The user's favorites list before update`
@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
 
     await blogger.addFavoriteBlog(blogId);
     await blogger.save();
-    const favoritesUpdated = blogger.getFavoriteBlogs();
+    const favoritesUpdated = blogger.getFavouriteBlogs();
 
     logger.debug(
       { ownerId, addBid: blogId, UpdatedFavorites: favoritesUpdated },
