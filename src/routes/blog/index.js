@@ -2,12 +2,18 @@
 
 const express = require('express');
 
-// Create a router on which to mount our API endpoints
-const router = express.Router();
-
 // authentication middleware
 const { authenticate } = require('../../auth');
 
+// Create a router on which to mount our API endpoints
+const router = express.Router();
+
+// -----------------------------------------
+/* Search Functionality Routes */
+//  GET /blog/search
+router.get(`/search`, require('./search'));
+
+// -----------------------------------------
 /* CRUD Routes */
 // POST /blog -> Create a new blog post
 router.post(`/`, authenticate(), require('./post'));
@@ -25,9 +31,5 @@ router.get(`/:id`, authenticate(), require('./getById'));
 router.delete(`/:id`, authenticate(), require('./delete'));
 
 // -----------------------------------------
-/* Search Functionality Routes */
-//  GET /blog/search
-router.get(`/search`, require('./search'));
 
-// -----------------------------------------
 module.exports = router;
