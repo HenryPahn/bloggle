@@ -79,7 +79,32 @@ class Blogger {
     this.blogs = await Blog.byUser(this.ownerId);
 
     await docRef.set({ ...this }, { merge: true });
-    return docRef.id;
+    return this.ownerId;
+  }
+
+  /**
+   * Deletes a blogger document from Firestore by ownerId
+   * @param {string} ownerId - The ownerId of the blogger to delete
+   * @returns {Promise<void>}
+   */
+  static async delete(ownerId) {
+    if (!ownerId) {
+      throw new Error('Owner ID is required.');
+    }
+
+    // Query Firestore to find the blogger document by ownerId
+    const querySnapshot = await fireDB
+      .collection('bloggers')
+      .where('ownerId', '==', ownerId)
+      .get();
+
+    if (querySnapshot.empty) {
+      throw new Error(`No blogger found with ownerId: ${ownerId}`);
+    }
+
+    // Delete the document
+    const bloggerDoc = querySnapshot.docs[0];
+    await fireDB.collection('bloggers').doc(bloggerDoc.id).delete();
   }
 
   getData() {
