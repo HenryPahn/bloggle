@@ -1,4 +1,4 @@
-// src/routes/blogger/get.js
+// src/routes/blogger/favoriteBlogs/get.js
 
 const { createSuccessResponse, createErrorResponse } = require('../../../response');
 const { Blogger } = require('../../../model/blogger');
@@ -17,20 +17,25 @@ module.exports = async (req, res) => {
     const favorites = blogger.getFavoriteBlogs();
 
     logger.debug(
-      { favorites, ownerId: req.user },
+      { ownerId, favorites },
       'GET /blogger/favorite - Retrieved favorite blog post list'
     );
     return res.status(200).json(createSuccessResponse({ favorites }));
   } catch (err) {
-    if (
-      err.message.includes('Owner ID is required') ||
-      err.message.includes('No blogger found with ownerId')
-    ) {
+    if (err.message.includes('Owner ID is required')) {
       logger.warn(
         { ownerId, errMessage: err.message },
-        `GET /blogger/favorite - Error retrieving the user's favorite blog post list`
+        `GET /blogger/favorite - Missing required fields`
       );
       return res.status(400).json(createErrorResponse(400, err.message));
+    }
+
+    if (err.message.includes('No blogger found with ownerId')) {
+      logger.warn(
+        { ownerId, errMessage: err.message },
+        `GET /blogger/favorite - Blogger not found`
+      );
+      return res.status(404).json(createErrorResponse(404, err.message));
     }
 
     logger.error({ errMessage: err.message }, `GET /blogger/favorite - Internal Server Error`);
