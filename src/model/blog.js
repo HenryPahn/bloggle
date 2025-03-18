@@ -4,7 +4,6 @@
 // https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
 const { fireDB, storage } = require("./firestore-db"); // Import Firestore config
-const logger = require("../logger")
 
 class Blog {
   /**
@@ -44,25 +43,18 @@ class Blog {
    * @returns Promise<Array<Blog's id>>
    */
   static async byUser(ownerId) {
-    try {
-      if (!ownerId) {
-        throw new Error("Owner ID is required.");
-      }
+    if (!ownerId) {
+      throw new Error("Owner ID is required.");
+    }
 
+    try {
       const querySnapshot = await fireDB.collection("blogs").where("ownerId", "==", ownerId).get();
 
-      if (querySnapshot.empty) {
-        logger.debug(`No blogs found for owner: ${ownerId}`);
-        return [];
-      }
+      let blogIds = querySnapshot.docs.map((doc) => doc.data().id).filter((id) => id !== undefined);
 
-      let blogIds = querySnapshot.docs
-                      .map((doc) => doc.data().id)
-                      .filter((id) => id !== undefined);
-      return blogIds;
+      return !querySnapshot.empty ? blogIds : [];
     } catch (error) {
-      logger.error("Error getting all blogs by userId:", error);
-      return error;
+      throw error;
     }
   }
 
@@ -74,11 +66,11 @@ class Blog {
    * @returns Promise<Blog>
    */
   static async byId(ownerId, id) {
-    try {
-      if (!ownerId || !id) {
-        throw new Error("Owner ID and Blog ID are required.");
-      }
+    if (!ownerId || !id) {
+      throw new Error("Owner ID and Blog ID are required.");
+    }
 
+    try {
       const querySnapshot = await fireDB
         .collection("blogs")
         .where("ownerId", "==", ownerId)
@@ -94,8 +86,7 @@ class Blog {
 
       return blogData ? new Blog(blogData) : undefined;
     } catch (error) {
-      logger.error("Error getting a blog by id:", error);
-      return error;
+      throw error;
     }
   }
 
@@ -107,11 +98,11 @@ class Blog {
    * @returns true
    */
   static async delete(ownerId, id) {
-    try {
-      if (!ownerId || !id) {
-        throw new Error("Owner ID and Blog ID are required.");
-      }
+    if (!ownerId || !id) {
+      throw new Error("Owner ID and Blog ID are required.");
+    }
 
+    try {
       const querySnapshot = await fireDB
         .collection("blogs")
         .where("ownerId", "==", ownerId)
@@ -127,8 +118,7 @@ class Blog {
 
       return true;
     } catch (error) {
-      logger.error("Error deleting a blog in firestore:", error);
-      return error;
+      throw error;
     }
   }
 
@@ -139,11 +129,11 @@ class Blog {
    * @returns Promise<Array<Blog>>
    */
   static async search(keyword, category = null) {
-    try {
-      if (!keyword) {
-        throw new Error("Keyword is required.");
-      }
+    if (!keyword) {
+      throw new Error("Keyword is required.");
+    }
 
+    try {
       const searchKeyword = keyword.trim().toLowerCase();
       const querySnapshot = await fireDB.collection("blogs").get();
 
@@ -163,8 +153,7 @@ class Blog {
 
       return matchingBlogs.length ? matchingBlogs : [];
     } catch (error) {
-      logger.error("Error searching blogs by title pattern:", error);
-      return error;
+      throw error;
     }
   }
 
@@ -193,7 +182,6 @@ class Blog {
 
         for (const image of this.localImages) {
           if (!image || !image.buffer) {
-            console.error("Skipping invalid image:", image);
             continue;
           }
 
@@ -211,8 +199,7 @@ class Blog {
 
       return docRef.id;
     } catch (error) {
-      logger.error("Error saving a blog object to firestore:", error);
-      return error;
+      throw error;
     }
   }
 

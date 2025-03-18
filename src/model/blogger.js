@@ -2,7 +2,6 @@
 
 const { Blog } = require('./blog');
 const { fireDB } = require("./firestore-db");
-const logger = require("../logger")
 
 class Blogger {
   /**
@@ -36,11 +35,11 @@ class Blogger {
   * @returns a successful message
   */
   static async byUser(ownerId) {
-    try {
-      if (!ownerId) {
-        throw new Error("Owner ID is required.");
-      }
+    if (!ownerId) {
+      throw new Error("Owner ID is required.");
+    }
 
+    try {
       const querySnapshot = await fireDB
         .collection("bloggers")
         .where("ownerId", "==", ownerId)
@@ -55,8 +54,7 @@ class Blogger {
 
       return new Blogger(bloggerData);
     } catch (error) {
-      logger.error("Error fetching Blogger by ownerId:", error);
-      return error;
+      throw error;
     }
   }
 
@@ -88,8 +86,7 @@ class Blogger {
       await docRef.set({ ...this }, { merge: true });
       return docRef.id;
     } catch (error) {
-      logger.error("Error saving Blogger:", error);
-      return error;
+      throw error;
     }
   }
 
