@@ -14,14 +14,8 @@ module.exports = async (req, res) => {
     logger.info('GET /blog - Incoming request to fetch all blog posts of the current user');
 
     const blogs = await Blog.byUser(ownerId);
+
     logger.debug({ ownerId, blogs }, 'GET /blog - Retrieved blog posts');
-
-    if (!blogs.length) {
-      const message = `The user hasn't created any blog posts yet`;
-      logger.debug({ ownerId }, `GET /blog - ${message}`);
-      return res.status(200).json(createSuccessResponse({ blogs, message }));
-    }
-
     return res.status(200).json(createSuccessResponse({ blogs }));
   } catch (err) {
     if (err.message.includes('Owner ID is required')) {
