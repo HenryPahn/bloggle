@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     try {
       // Fetch the existing blogger instance
       blogger = await Blogger.byUser(req.user);
-    } catch (error) {
+    } catch  {
       logger.warn(`POST /visited - No Blogger found for user: ${req.user}, creating new instance.`);
       
       // Create a new Blogger instance if one doesn't exist
