@@ -20,5 +20,11 @@ router.delete(`/favorite/:id`, require('./favoriteBlogs/delete'));
 //  GET /blogger/visited
 router.get(`/visited`, require('./visitedBlogs/get'));
 
+//  POST /blogger/visited/:id
+router.post(`/visited/:blogId`, require('./visitedBlogs/post'));
+
+//  DELETE /blogger/visited/:id
+router.delete(`/visited/:blogId`, require('./visitedBlogs/delete'));
+
 // -----------------------------------------
 module.exports = router;
