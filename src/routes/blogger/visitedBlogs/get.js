@@ -1,12 +1,25 @@
-// src/routes/blogger/get.js
+const { createSuccessResponse, createErrorResponse } = require('../../../response');
+const { Blogger } = require('../../../model/blogger');
+const logger = require('../../../logger');
 
-// Functions return successful responses 
-const { createSuccessResponse } = require('../../../response')
-
+/**
+ * Get the visited blogs of the authenticated user
+ */
 module.exports = async (req, res) => {
-  const successResponse = createSuccessResponse({
-    // returned data goes here
-  })
+  logger.info('GET /visited - Incoming request to get visited blogs');
 
-  res.status(200).json(successResponse);
+  try {
+    // fetch blogger
+    const blogger = await Blogger.byUser(req.user);
+
+    // Fetch visited blogs using the method from Blogger class
+    const visitedBlogs = blogger.getVisitedBlogs();
+
+    logger.info({ ownerId: req.user }, 'GET /visited - Retrieved visited blogs');
+    return res.status(200).json(createSuccessResponse({ visitedBlogs }));
+
+  } catch (err) {
+    logger.error({ message: err.message }, 'GET /visited - Error fetching visited blogs');
+    return res.status(500).json(createErrorResponse(500, 'Internal Server Error'));
+  }
 };
