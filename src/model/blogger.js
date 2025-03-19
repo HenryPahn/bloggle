@@ -1,11 +1,11 @@
 // /src/mode/blogger.js
 
 const { Blog } = require('./blog');
-const { fireDB } = require("./firestore-db");
+const { fireDB } = require('./firestore-db');
 
 class Blogger {
   /**
-   * Contructor 
+   * Contructor
    * @param {string} id
    * @param {string} ownerId
    * @param {string} created
@@ -14,12 +14,10 @@ class Blogger {
   constructor({ ownerId, created, updated, blogs, favoriteBlogs, visitedBlogs }) {
     // OwnerId and type are required. if not exist, throw an exception
     if (!ownerId) {
-      throw new Error(
-        `ownerId and type strings are required, got ownerId=${ownerId}`
-      );
+      throw new Error(`ownerId and type strings are required, got ownerId=${ownerId}`);
     }
 
-    // get the current time 
+    // get the current time
     const currentDateTime = new Date().toISOString();
 
     this.ownerId = ownerId;
@@ -31,18 +29,15 @@ class Blogger {
   }
 
   /**
-  * get the Blogger object by ownerId from the firebase
-  * @returns a successful message
-  */
+   * get the Blogger object by ownerId from the firebase
+   * @returns a successful message
+   */
   static async byUser(ownerId) {
     if (!ownerId) {
-      throw new Error("Owner ID is required.");
+      throw new Error('Owner ID is required.');
     }
 
-    const querySnapshot = await fireDB
-      .collection("bloggers")
-      .where("ownerId", "==", ownerId)
-      .get();
+    const querySnapshot = await fireDB.collection('bloggers').where('ownerId', '==', ownerId).get();
 
     if (querySnapshot.empty) {
       throw new Error(`No blogger found with ownerId: ${ownerId}`);
@@ -55,25 +50,25 @@ class Blogger {
   }
 
   /**
-  * Saves the current blogger's data to the database
-  * @returns a successful message
-  */
+   * Saves the current blogger's data to the database
+   * @returns a successful message
+   */
   async save() {
     const currentDateTime = new Date().toISOString();
     this.updated = currentDateTime;
 
     // Query Firestore to check if the blogger exists
     const querySnapshot = await fireDB
-      .collection("bloggers")
-      .where("ownerId", "==", this.ownerId)
+      .collection('bloggers')
+      .where('ownerId', '==', this.ownerId)
       .get();
 
     let docRef;
     if (!querySnapshot.empty) {
       const existingDoc = querySnapshot.docs[0];
-      docRef = fireDB.collection("bloggers").doc(existingDoc.id);
+      docRef = fireDB.collection('bloggers').doc(existingDoc.id);
     } else {
-      docRef = fireDB.collection("bloggers").doc();
+      docRef = fireDB.collection('bloggers').doc();
     }
 
     this.blogs = await Blog.byUser(this.ownerId);
@@ -114,8 +109,8 @@ class Blogger {
       updated: this.updated,
       blogs: this.blogs,
       favoriteBlogs: this.favoriteBlogs,
-      visitedBlogs: this.visitedBlogs
-    }
+      visitedBlogs: this.visitedBlogs,
+    };
   }
 
   /************************************************************/
@@ -130,21 +125,17 @@ class Blogger {
   }
 
   /**
-   * Add a blog id to favorite blog list 
+   * Add a blog id to favorite blog list
    * @param {string} blogId
    * @returns true
    */
   addFavoriteBlog(blogId) {
     if (!blogId) {
-      throw new Error(
-        `Blog ID is required, got blogId=${blogId}`
-      );
+      throw new Error(`Blog ID is required, got blogId=${blogId}`);
     }
 
     if (this.favoriteBlogs.includes(blogId)) {
-      throw new Error(
-        `Blog is already added to favorite list!`
-      );
+      throw new Error(`Blog is already added to favorite list!`);
     }
 
     this.favoriteBlogs.push(blogId);
@@ -153,23 +144,19 @@ class Blogger {
 
   /**
    * Delete a user's favorite blog
-   * @param {string} blogId 
+   * @param {string} blogId
    * @returns true
    */
   deleteFavoriteBlog(blogId) {
     if (!blogId) {
-      throw new Error(
-        `Blog ID is required, got blogId=${blogId}`
-      );
+      throw new Error(`Blog ID is required, got blogId=${blogId}`);
     }
 
     if (!this.favoriteBlogs.includes(blogId)) {
-      throw new Error(
-        `Blog doesn't exist in favorite list!`
-      );
+      throw new Error(`Blog doesn't exist in favorite list!`);
     }
 
-    this.favoriteBlogs = this.favoriteBlogs.filter(id => id !== blogId);
+    this.favoriteBlogs = this.favoriteBlogs.filter((id) => id !== blogId);
     return true;
   }
 
@@ -191,15 +178,11 @@ class Blogger {
    */
   async addVisitedBlog(blogId) {
     if (!blogId) {
-      throw new Error(
-        `Blog ID is required, got blogId=${blogId}`
-      );
+      throw new Error(`Blog ID is required, got blogId=${blogId}`);
     }
 
     if (this.visitedBlogs.includes(blogId)) {
-      throw new Error(
-        `Blog is already added to visited list!`
-      );
+      throw new Error(`Blog is already added to visited list!`);
     }
 
     this.visitedBlogs.push(blogId);
@@ -213,18 +196,14 @@ class Blogger {
    */
   deleteVisitedBlog(blogId) {
     if (!blogId) {
-      throw new Error(
-        `Blog ID is required, got blogId=${blogId}`
-      );
+      throw new Error(`Blog ID is required, got blogId=${blogId}`);
     }
 
     if (!this.visitedBlogs.includes(blogId)) {
-      throw new Error(
-        `Blog doesn't exist in visited list!`
-      );
+      throw new Error(`Blog doesn't exist in visited list!`);
     }
 
-    this.visitedBlogs = this.visitedBlogs.filter(id => id !== blogId);
+    this.visitedBlogs = this.visitedBlogs.filter((id) => id !== blogId);
     return true;
   }
 }
