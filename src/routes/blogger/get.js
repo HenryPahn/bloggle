@@ -13,6 +13,8 @@ module.exports = async (req, res) => {
 
   logger.info('GET /blogger/:ownerId');
   let blogger;
+  
+  let status = 200;
 
   // retrieve blogger
   try {
@@ -20,11 +22,13 @@ module.exports = async (req, res) => {
   } catch (err) {
     blogger = new Blogger({ ownerId: ownerId });
     await blogger.save();
+
+    status = 201;
   }
 
   createDebugLog(`Retrieved blog ids successfully: 
 - ownerId: ${ownerId}
 - Retrieved Blogger Data: ${blogger.getData()}`)
 
-  return res.status(200).json(createSuccessResponse({ blogger: blogger.getData() }));
+  return res.status(201).json(createSuccessResponse({ blogger: blogger.getData() }));
 };
