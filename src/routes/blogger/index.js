@@ -8,18 +8,7 @@ const { authenticate } = require('../../auth');
 // Create a router on which to mount our API endpoints
 const router = express.Router();
 
-/* Blogger Data Routes */
-// GET /blogger/:ownerId -> Retrieve a Blogger data
-router.get(`/:ownerId`, require('./get'));
-
-// GET /blogger/:ownerId/blogs -> Retrive a list of all blog of current blogger.
-router.get(`/:ownerId/blogs`, require('./getAllBlogs'))
-
-// GET /blogger/:ownerId/:id -> Retrive a blog data of a blogger.
-router.get(`/:ownerId/:blogId`, require('./getBlog'))
-
-
-
+// -----------------------------------------
 /* Favorite Functionality Routes */
 // GET /blogger/favorite -> Retrieve the user’s list of favorite blog posts
 router.get(`/favorite`, authenticate(), require('./favoriteBlogs/get'));
@@ -40,6 +29,17 @@ router.post(`/visited/:blogId`, authenticate(), require('./visitedBlogs/post'));
 
 //  DELETE /blogger/visited/:id
 router.delete(`/visited/:blogId`, authenticate(), require('./visitedBlogs/delete'));
+
+// -----------------------------------------
+/* Blogger Data Routes */
+// GET /blogger/:ownerId -> Retrieve a Blogger data
+router.get(`/`, authenticate(), require('./get'));
+
+// GET /blogger/:ownerId/blogs -> Retrive a list of all blog of current blogger.
+router.get(`/:ownerId`, require('./getAllBlogs'))
+
+// GET /blogger/:ownerId/:id -> Retrive a blog data of a blogger.
+router.get(`/:ownerId/:blogId`, require('./getBlog'))
 
 // -----------------------------------------
 module.exports = router;

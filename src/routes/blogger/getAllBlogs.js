@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   const { ownerId } = req.params;
 
   try {
-    logger.info('GET /blogger/:ownerId/blogs');
+    logger.info('GET /blogger/:ownerId');
     
     // check if any Blogger with the provided ownerId exists
     await Blogger.byUser(ownerId);
