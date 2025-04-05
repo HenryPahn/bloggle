@@ -1,7 +1,6 @@
 // src/routes/blog/get.js
 
-const { createSuccessResponse, createErrorResponse, createDebugLog } = require('../../response');
-const { Blog } = require('../../model/blog');
+const { createSuccessResponse, createDebugLog } = require('../../response');
 const { Blogger } = require('../../model/blogger');
 const logger = require('../../logger');
 
@@ -20,6 +19,7 @@ module.exports = async (req, res) => {
   try {
     blogger = await Blogger.byUser(ownerId);
   } catch (err) {
+    logger.info({err: err}, "Create a new Blogger")
     blogger = new Blogger({ ownerId: ownerId });
     await blogger.save();
 
@@ -30,5 +30,5 @@ module.exports = async (req, res) => {
 - ownerId: ${ownerId}
 - Retrieved Blogger Data: ${blogger.getData()}`)
 
-  return res.status(201).json(createSuccessResponse({ blogger: blogger.getData() }));
+  return res.status(status).json(createSuccessResponse({ blogger: blogger.getData() }));
 };
