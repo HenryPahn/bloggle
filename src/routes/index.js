@@ -5,9 +5,6 @@ const express = require('express');
 // author and version from our package.json file
 const { authors, version } = require('../../package.json');
 
-// authentication middleware
-const { authenticate } = require('../auth');
-
 // Create a router that we can use to mount our API
 const router = express.Router();
 
@@ -15,7 +12,7 @@ const router = express.Router();
 router.use(`/blog`, require('./blog'));
 
 // Blogger routes
-router.use(`/blogger`, authenticate(), require('./blogger'));
+router.use(`/blogger`, require('./blogger'));
 
 // a simple health check route
 router.get('/', (req, res) => {

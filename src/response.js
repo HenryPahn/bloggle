@@ -18,3 +18,16 @@ module.exports.createErrorResponse = function (code, message) {
     }
   }
 };
+
+const logger = require("./logger")
+
+// add a debug message to logger
+module.exports.createDebugLog = function (message) {
+  // Check if the current npm script is 'dev' or 'debug'
+  const isDebugging = process.env.npm_lifecycle_event === 'dev' || process.env.npm_lifecycle_event === 'debug';
+
+  // if user is debugging, print all environment variables to check if any is missing	  
+  if (isDebugging) {
+    logger.debug(message)
+  }
+}

@@ -11,5 +11,8 @@
   "files.insertFinalNewline": true,
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "bluebrown.yamlfmt"
   }
 }

@@ -40,7 +40,9 @@ class Blogger {
     const querySnapshot = await fireDB.collection('bloggers').where('ownerId', '==', ownerId).get();
 
     if (querySnapshot.empty) {
-      throw new Error(`No blogger found with ownerId: ${ownerId}`);
+      const err = new Error(`No blogger found with ownerId=${ownerId}`);
+      err.status = 404; 
+      throw err;
     }
 
     const bloggerDoc = querySnapshot.docs[0];

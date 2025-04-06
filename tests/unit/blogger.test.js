@@ -130,6 +130,6 @@ describe('Blogger class', () => {
   });
 
   test('byUser(): throw error if no blogger is found', async () => {
-    await expect(Blogger.byUser('unknownOwnerId')).rejects.toThrow('No blogger found with ownerId: unknownOwnerId');
+    await expect(Blogger.byUser('unknownOwnerId')).rejects.toThrow('No blogger found with ownerId=unknownOwnerId');
   });
 });
