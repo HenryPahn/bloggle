@@ -1,5 +1,5 @@
 const { Blog } = require('../../model/blog');
-const { createSuccessResponse, createErrorResponse } = require('../../response');
+const { createSuccessResponse, createErrorResponse, createDebugLog } = require('../../response');
 const logger = require('../../logger');
 
 module.exports = async (req, res) => {
@@ -7,21 +7,29 @@ module.exports = async (req, res) => {
   const { keyword, category } = req.query;
 
   try {
-    // Checking if the keyword is not provided
-    if (!keyword) { 
-      logger.error({ errMessage: 'Keyword must be provided' }, 'GET /blog/search - Bad Request');
-      return res.status(400).json(createErrorResponse(400, 'Keyword must be provided'));
-    }
+    logger.info(`GET /blog/search?keyword=...&category=...`);
 
     // Searching for blogs based on the provided keyword and category
     const blogs = await Blog.search(keyword, category);
 
     blogs.sort((a, b) => new Date(b.created) - new Date(a.created)); // Sorting blogs by creation date (latest first)
-      
-    logger.info({ blogsCount: blogs.length }, 'GET /blog/search - Blogs retrieved successfully');
+
+
+    createDebugLog(`Passed vairables: 
+- Keyword: ${keyword}
+- Category: ${category}
+- Founded Blogs data: ${blogs}
+`)
+
     return res.status(200).json(createSuccessResponse({ blogs: blogs }));
-  } catch (error) {
-    logger.error({ errMessage: error.message }, 'GET /blog/search - Error searching blog');
-    return res.status(500).json(createErrorResponse(500, 'Interval Server Error'));
+  } catch (err) {
+    const status = err.status || 500;
+    const message = err.message || 'Internal Server Error';
+
+    const errorMessage = createErrorResponse(status, message)
+
+    logger.error({ errMessage: err.message });
+
+    res.status(status).json(errorMessage);
   }
 };
