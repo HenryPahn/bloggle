@@ -44,15 +44,17 @@ class Blog {
    */
   static async byUser(ownerId) {
     if (!ownerId) {
-      throw new Error("Owner ID is required.");
+      const err = new Error("Owner ID is required.");
+      err.status = 400;
+      throw err;
     }
 
     const querySnapshot = await fireDB
-    .collection("blogs")
-    .where("ownerId", "==", ownerId)
-    .orderBy("created", "desc")
-    .get();
-  
+      .collection("blogs")
+      .where("ownerId", "==", ownerId)
+      .orderBy("created", "desc")
+      .get();
+
     let blogIds = querySnapshot.docs.map((doc) => doc.data().id);
 
     return blogIds;
@@ -67,7 +69,9 @@ class Blog {
    */
   static async byId(ownerId, id) {
     if (!ownerId || !id) {
-      throw new Error("Owner ID and Blog ID are required.");
+      const err = new Error("Owner ID and Blog ID are required.");
+      err.status = 400;
+      throw err;
     }
 
     const querySnapshot = await fireDB
@@ -77,7 +81,9 @@ class Blog {
       .get();
 
     if (querySnapshot.empty) {
-      throw new Error(`No blog found with: ${ownerId} with ID ${id}`);
+      const err = new Error(`No blog found with: ownerId=${ownerId} with blogId=${id}`);
+      err.status = 404;
+      throw err;
     }
 
     const blogDoc = querySnapshot.docs[0];
@@ -111,6 +117,24 @@ class Blog {
     const blogDoc = querySnapshot.docs[0];
     await fireDB.collection("blogs").doc(blogDoc.id).delete();
 
+    // Remove blog ID from all Blogger arrays (blogs, favoriteBlogs, visitedBlogs)
+    const bloggerSnapshot = await fireDB
+      .collection("bloggers")
+      .where("blogs", "array-contains", id)
+      .get();
+
+    for (const doc of bloggerSnapshot.docs) {
+      const data = doc.data();
+      const updatedData = {
+        blogs: data.blogs?.filter(bid => bid !== id) || [],
+        favoriteBlogs: data.favoriteBlogs?.filter(bid => bid !== id) || [],
+        visitedBlogs: data.visitedBlogs?.filter(bid => bid !== id) || [],
+        updated: new Date().toISOString()
+      };
+
+      await fireDB.collection("bloggers").doc(doc.id).set(updatedData, { merge: true });
+    }
+
     return true;
   }
 
@@ -120,9 +144,18 @@ class Blog {
    * @param {string} category optional filter
    * @returns Promise<Array<Blog>>
    */
-  static async search(keyword, category = null) {
+  static async search(keyword, category = undefined) {
     if (!keyword) {
-      throw new Error("Keyword is required.");
+      const err = new Error(`Keyword is required`);
+      err.status = 400;
+      throw err;
+    }
+
+    const validCategories = ["title", "content"];
+    if (category && !validCategories.includes(category)) {
+      const err = new Error(`Invalid category! Only 'title' or 'content' allowed. Got category=${category}`);
+      err.status = 400;
+      throw err;
     }
 
     const searchKeyword = keyword.trim().toLowerCase();
@@ -132,12 +165,20 @@ class Blog {
 
     querySnapshot.forEach((doc) => {
       const blogData = doc.data();
-      if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content") {
-        matchingBlogs.push(new Blog(blogData));
-        return;
-      }
 
-      if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title") {
+      const title = blogData.title?.trim().toLowerCase() || "";
+      const content = blogData.content?.trim().toLowerCase() || "";
+
+      const keywordRegex = new RegExp(`\\b${searchKeyword}\\b`, 'i');
+
+      const titleMatches = keywordRegex.test(title);
+      const contentMatches = keywordRegex.test(content);
+
+      if (
+        (!category && (titleMatches || contentMatches)) ||
+        (category === "title" && titleMatches) ||
+        (category === "content" && contentMatches)
+      ) {
         matchingBlogs.push(new Blog(blogData));
       }
     });
@@ -194,6 +235,26 @@ class Blog {
 
     await docRef.set(blogData, { merge: true });
 
+    // if a new blog is created
+    if (querySnapshot.empty) {
+      const bloggerSnapshot = await fireDB
+        .collection("bloggers")
+        .where("ownerId", "==", this.ownerId)
+        .get();
+
+      if (!bloggerSnapshot.empty) {
+        const bloggerDoc = bloggerSnapshot.docs[0];
+        const bloggerData = bloggerDoc.data();
+
+        const updatedBlogs = Array.from(new Set([...(bloggerData.blogs || []), this.id]));
+
+        await fireDB.collection("bloggers").doc(bloggerDoc.id).update({
+          blogs: updatedBlogs,
+          updated: currentDateTime,
+        });
+      }
+    }
+
     return this.id;
   }
 
@@ -222,7 +283,7 @@ class Blog {
    */
   setData(title, content, images) {
     if (!title && !content && (!images || images.length === 0)) {
-      throw new Error(`The data isn't changed,  title=${title}, content=${content}, images=${images}`);
+      throw new Error(`Title, content and images are required,  title=${title}, content=${content}, images=${images}`);
     }
 
     this.title = title;
