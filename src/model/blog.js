@@ -146,11 +146,16 @@ class Blog {
    */
   static async search(keyword, category = undefined) {
     if (!keyword) {
-      throw new Error("Keyword is required.");
+      const err = new Error(`Keyword is required`);
+      err.status = 400;
+      throw err;
     }
 
-    if (category && category != "title" && category != "content") {
-      throw new Error(`Invalid category! Only title or content, got category=${category}`);
+    const validCategories = ["title", "content"];
+    if (category && !validCategories.includes(category)) {
+      const err = new Error(`Invalid category! Only 'title' or 'content' allowed. Got category=${category}`);
+      err.status = 400;
+      throw err;
     }
 
     const searchKeyword = keyword.trim().toLowerCase();
@@ -160,12 +165,20 @@ class Blog {
 
     querySnapshot.forEach((doc) => {
       const blogData = doc.data();
-      if (blogData.title && blogData.title.toLowerCase().includes(searchKeyword) && category != "content") {
-        matchingBlogs.push(new Blog(blogData));
-        return;
-      }
 
-      if (blogData.content && blogData.content.toLowerCase().includes(searchKeyword) && category != "title") {
+      const title = blogData.title?.trim().toLowerCase() || "";
+      const content = blogData.content?.trim().toLowerCase() || "";
+
+      const keywordRegex = new RegExp(`\\b${searchKeyword}\\b`, 'i');
+
+      const titleMatches = keywordRegex.test(title);
+      const contentMatches = keywordRegex.test(content);
+
+      if (
+        (!category && (titleMatches || contentMatches)) ||
+        (category === "title" && titleMatches) ||
+        (category === "content" && contentMatches)
+      ) {
         matchingBlogs.push(new Blog(blogData));
       }
     });
