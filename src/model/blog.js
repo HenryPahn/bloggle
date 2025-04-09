@@ -207,21 +207,32 @@ class Blog {
 
     if (this.localImages && this.localImages.length > 0) {
       this.images = [];
-
+    
       for (const image of this.localImages) {
         if (!image || !image.buffer) {
           continue;
         }
-
+    
         const storageRef = storage.bucket().file(`blog_images/${Date.now()}_${image.originalname}`);
-        await storageRef.save(image.buffer);
-
+    
+        // Define metadata explicitly
+        const metadata = {
+          contentType: image.mimetype || 'image/png', // Default to PNG if missing
+          cacheControl: 'public, max-age=31536000',
+        };
+    
+        // Save image with metadata
+        await storageRef.save(image.buffer, { metadata });
+    
+        // Make file publicly accessible (so no token is required)
+        await storageRef.makePublic();
+    
         const imageUrl = `https://storage.googleapis.com/${storageRef.bucket.name}/${storageRef.name}`;
         this.images.push(imageUrl);
       }
-
+    
       this.localImages = [];
-    }
+    }    
 
     const blogData = {
       id: this.id,
